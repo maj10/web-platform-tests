@@ -12,52 +12,33 @@
     <div id="log"></div>
 
     <script>
-      var blob = new Blob(["TEST THE ABORT METHOD"]);
+    test(function() {
       var readerNoRead = new FileReader();
+      readerNoRead.abort();
+      assert_equals(readerNoRead.readyState, readerNoRead.EMPTY);
+      assert_equals(readerNoRead.result, null);
+    }, "Aborting before read");
+
+    async_test(function() {
+      var blob = new Blob(["TEST THE ABORT METHOD"]);
       var readerAbort = new FileReader();
 
-      setup({explicit_done: true});
-
-      try {
-        readerNoRead.abort();
-      } catch (e) {
-        test(function() {
-          assert_unreached("Exception thrown");
-        }, "Exception thrown when call abort method");
-      }
-
-      test(function() {
-        assert_equals(readerNoRead.readyState, readerNoRead.EMPTY, "The readyState is " + readerNoRead.EMPTY);
-      }, "Check if readyState is EMPTY when abort called and no reads called");
-
-      test(function() {
-        assert_equals(readerNoRead.result, null, "The result is null");
-      }, "Check if the result is null when abort called and no reads called");
-
-
-      on_event(readerAbort, "abort", function(evt) {
-        test(function() {
-          assert_equals(readerAbort.readyState, readerAbort.DONE, "The readyState is " + readerAbort.DONE);
-        }, "Check if abort event occurred");
+      readerAbort.onabort = this.step_func(function(evt) {
+        assert_equals(readerAbort.readyState, readerAbort.DONE);
       });
 
-      on_event(readerAbort, "loadstart", function(evt) {        
+      readerAbort.onloadstart = this.step_func(function(evt) {
         readerAbort.abort();
       });
 
-      on_event(readerAbort, "loadend", function(evt) {
-        test(function() {
-          assert_equals(readerAbort.result, null, "The result is null");
-        }, "Check if the result is null when abort");
-
-        test(function() {
-          assert_equals(readerAbort.readyState, readerAbort.DONE, "The readyState is " + readerAbort.DONE);
-        }, "Check if the readyState is DONE when abort");
-
-        done();
+      readerAbort.onloadend = this.step_func(function(evt) {
+        assert_equals(readerAbort.result, null);
+        assert_equals(readerAbort.readyState, readerAbort.DONE);
+        this.done();
       });
 
       readerAbort.readAsText(blob);
+    }, "Aborting after read");
     </script>
   </body>
 </html>
