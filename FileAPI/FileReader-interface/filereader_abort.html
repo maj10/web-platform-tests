@@ -28,10 +28,12 @@
       });
 
       readerAbort.onloadstart = this.step_func(function(evt) {
+        assert_equals(readerAbort.readyState, readerAbort.LOADING);
         readerAbort.abort();
       });
 
       readerAbort.onloadend = this.step_func(function(evt) {
+        // https://www.w3.org/Bugs/Public/show_bug.cgi?id=24401
         assert_equals(readerAbort.result, null);
         assert_equals(readerAbort.readyState, readerAbort.DONE);
         this.done();
